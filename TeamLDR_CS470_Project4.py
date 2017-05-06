@@ -9,7 +9,7 @@ class HalmaBoard():
         self.betweenMove = False
         self.mainWindow = Tk()
         self.boardFrame = Frame(self.mainWindow)
-        self.titleLabel = Label(self.boardFrame, text = "Hamla Game")
+        self.titleLabel = Label(self.boardFrame, text = "Halma Game")
         self.buttonList = []
         self.turnLabel = Label(self.boardFrame, text = "Green Turn: Starting Move")
         self.redScoreLabel = Label(self.boardFrame, text = "")
@@ -26,131 +26,127 @@ class HalmaBoard():
         self.redScore = 0
         self.moveTotal = 0
         self.alpha16 = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"]
-        self.gameOver = False 
+        self.gameOver = False
+        self.potentialMoves = []
+        self.greenPiecesCurrentPosition = []
+        self.redPiecesCurrentPosition = []
+        self.redColor = "red"
+        self.redHighlightColor = "maroon"
+        self.redCornerColor = "pink"
+        self.greenColor = "darkgreen"
+        self.greenHighlightColor = "lawngreen"
+        self.greenCornerColor = "palegreen"
+        self.moveToHighlightColor = "yellow"
+        self.boardTileLight = "snow"
+        self.boardTileDark = "gray60"
+        self.redCornerUnmark = [(1, 5), (2, 5), (2, 6), (3, 5), (3, 6), (3, 7)]
+        self.greenCornerUnmark = [(6, 1), (6, 2), (7, 2), (6, 3), (7, 3), (8, 3)]
+        self.redCorner = [(1, 4), (1, 5), (1, 6), (1, 7), (2, 5), (2, 6), (2, 7), (3, 6), (3, 7), (4, 7)]
+        self.greenCorner = [(5, 0), (6, 0), (6, 1), (7, 0), (7, 1), (7, 2), (8, 0), (8, 1), (8, 2), (8, 3)]
 
     # Board setup ========================================================================================
-    def set16(self):
-        unmarkTop = [(2, 11), (3, 11), (4, 11), (4, 12), (3, 12), (4, 13)]
-        unmarkBot = [(12, 2), (12, 3), (12, 4), (13, 3), (13, 4), (14, 4)]
-        for row in range(5):
-            for col in range(5):
-                if ((row,col+11) not in unmarkTop):
-                    testButton = self.boardFrame.grid_slaves(row = row + 1, column = col + 11)
-                    testButton[0].config(bg = "red")
-        for row in range(5):
-            for col in range(5):
-                if ((row+12,col) not in unmarkBot):
-                    testButton = self.boardFrame.grid_slaves(row = row + 12, column = col)
-                    testButton[0].config(bg = "green")
-
-    def set10(self):
-        unmarkTop = [(2, 6), (3, 6), (3, 7), (1, 6), (2, 7), (3, 8)]
-        unmarkBot = [(7, 2), (7, 3), (8, 3), (7, 1), (8, 2), (9, 3)]
-        for row in range(4):
-            for col in range(4):
-                if ((row,col+6) not in unmarkTop):
-                    testButton = self.boardFrame.grid_slaves(row = row + 1, column = col + 6)
-                    testButton[0].config(bg = "red")
-        for row in range(4):
-            for col in range(4):
-                if ((row+7,col) not in unmarkBot):
-                    testButton = self.boardFrame.grid_slaves(row = row + 7, column = col)
-                    testButton[0].config(bg = "green")
-
     def set8(self):
-        unmarkTop = [(1, 5), (2, 5), (2, 6), (3, 5), (3, 6), (3, 7)]
-        unmarkBot = [(6, 1), (6, 2), (7, 2), (6, 3), (7, 3), (8, 3)]
         for row in range(4):
             for col in range(4):
-                if ((row,col+5) not in unmarkTop):
+                if ((row,col+5) not in self.redCornerUnmark):
                     testButton = self.boardFrame.grid_slaves(row = row + 1, column = col + 4)
-                    testButton[0].config(bg = "red")
+                    testButton[0].config(bg = self.redColor)
         for row in range(4):
             for col in range(4):
-                if ((row+6,col) not in unmarkBot):
+                if ((row+6,col) not in self.greenCornerUnmark):
                     testButton = self.boardFrame.grid_slaves(row = row + 5, column = col)
-                    testButton[0].config(bg = "green")
+                    testButton[0].config(bg = self.greenColor)
                     
     def setBoardUp(self, size):
-        allowedBoardSizes = [8, 10, 16]
+        allowedBoardSizes = [8]
         if (size not in allowedBoardSizes):
             print("Invalid Board")
-            self.turnLabel.config(text = "Invalid Board: Reset Game With board size [8, 10, 16]!")
+            self.turnLabel.config(text = "Invalid Board: Reset Game With board size [8]!")
             self.gameOver = True
-        elif (size == 16):
-            self.set16()
-        elif (size == 10):
-            self.set10()
-        elif (size == 8):
+        else:
             self.set8()
 
     def boardRefresh(self):
+        self.greenPiecesCurrentPosition = []
+        self.redPiecesCurrentPosition = []
         if (self.betweenMove == False):
             for row in range(self.boardSize):
                 for col in range (self.boardSize):
                     testButton = self.boardFrame.grid_slaves(row = row + 1, column = col)
-                    if (testButton[0].cget("bg") == "maroon"):
+                    if (testButton[0].cget("bg") == self.redHighlightColor):
                         self.moveFromRow = row + 1
                         self.moveFromCol = col
-                        self.whichColor = "maroon"
-                    if (testButton[0].cget("bg") == "seagreen"):
+                        self.whichColor = self.redHighlightColor
+                    if (testButton[0].cget("bg") == self.greenHighlightColor):
                         self.moveFromRow = row + 1
                         self.moveFromCol = col
-                        self.whichColor = "lightgreen"
-                    if (testButton[0].cget("bg") == "yellow" or testButton[0].cget("bg") == "seagreen" or testButton[0].cget("bg") == "maroon"):
+                        self.whichColor = self.greenHighlightColor
+                    if (testButton[0].cget("bg") == self.moveToHighlightColor or testButton[0].cget("bg") == self.greenHighlightColor or testButton[0].cget("bg") == self.redHighlightColor):
                         if (row%2 == 0):
                             if (col%2 == 0):
-                                testButton[0].config(bg = "snow")
+                                testButton[0].config(bg = self.boardTileLight)
                             else:
-                                testButton[0].config(bg = "gray60")
+                                testButton[0].config(bg = self.boardTileDark)
                         else:
                             if (col%2 != 0):
-                                testButton[0].config(bg = "snow")
+                                testButton[0].config(bg = self.boardTileLight)
                             else:
-                                testButton[0].config(bg = "gray60")
+                                testButton[0].config(bg = self.boardTileDark)
                     else:
+                        if (testButton[0].cget("bg") == self.greenColor):
+                            self.greenPiecesCurrentPosition.append((row + 1, col))
+                        elif (testButton[0].cget("bg") == self.redColor):
+                            self.redPiecesCurrentPosition.append((row + 1, col))
                         pass
         else:
             for row in range(self.boardSize):
                 for col in range (self.boardSize):
                     testButton = self.boardFrame.grid_slaves(row = row + 1, column = col)
-                    if (testButton[0].cget("bg") == "seagreen"):
-                        testButton[0].config(bg = "green")
+                    if (testButton[0].cget("bg") == self.greenHighlightColor):
+                        testButton[0].config(bg = self.greenColor)
                         self.moveFromRow = row + 1
                         self.moveFromCol = col
-                        self.whichColor = "seagreen"
-                    if (testButton[0].cget("bg") == "maroon"):
-                        testButton[0].config(bg = "red")
+                        self.whichColor = self.greenHighlightColor
+                    if (testButton[0].cget("bg") == self.redHighlightColor):
+                        testButton[0].config(bg = self.redColor)
                         self.moveFromRow = row + 1
                         self.moveFromCol = col
-                        self.whichColor = "maroon"
-                    if (testButton[0].cget("bg") == "yellow" or testButton[0].cget("bg") == "seagreen" or testButton[0].cget("bg") == "maroon"):
+                        self.whichColor = self.redHighlightColor
+                    if (testButton[0].cget("bg") == self.moveToHighlightColor or testButton[0].cget("bg") == self.greenHighlightColor or testButton[0].cget("bg") == self.redHighlightColor):
                         if (row%2 == 0):
                             if (col%2 == 0):
-                                testButton[0].config(bg = "snow")
+                                testButton[0].config(bg = self.boardTileLight)
                             else:
-                                testButton[0].config(bg = "gray60")
+                                testButton[0].config(bg = self.boardTileDark)
                         else:
                             if (col%2 != 0):
-                                testButton[0].config(bg = "snow")
+                                testButton[0].config(bg = self.boardTileLight)
                             else:
-                                testButton[0].config(bg = "gray60")
+                                testButton[0].config(bg = self.boardTileDark)
                     else:
+                        if (testButton[0].cget("bg") == self.greenColor):
+                            self.greenPiecesCurrentPosition.append((row + 1, col))
+                        elif (testButton[0].cget("bg") == self.redColor):
+                            self.redPiecesCurrentPosition.append((row + 1, col))
                         pass
-    
-    """
-    def blinkAfter(self): # Broken still, not needed though so...
-        blinkPos = self.boardFrame.grid_slaves(row = self.moveFromRow, column = self.moveFromCol)
-        currentColor = blinkPos[0].cget("bg")
-        for blinks in range(3):
-            for interval in range(10000):
-                if (blinks%2 == 0):
-                    blinkPos[0].config(bg = currentColor)
-                    #print("T")
-                else:
-                    blinkPos[0].config(bg = self.whichColor)
-                    #print("F")
-    """
+        for row in range(4):
+            for col in range(4):
+                if ((row,col+5) not in self.redCornerUnmark):
+                    testButton = self.boardFrame.grid_slaves(row = row + 1, column = col + 4)
+                    if (testButton[0].cget("bg") == self.boardTileLight or testButton[0].cget("bg") == self.boardTileDark):
+                        testButton[0].config(bg = self.redCornerColor)
+        for row in range(4):
+            for col in range(4):
+                if ((row+6,col) not in self.greenCornerUnmark):
+                    testButton = self.boardFrame.grid_slaves(row = row + 5, column = col)
+                    if (testButton[0].cget("bg") == self.boardTileLight or testButton[0].cget("bg") == self.boardTileDark):
+                        testButton[0].config(bg = self.greenCornerColor)
+        """
+        print("Current POS for Green: ", end="")
+        print(self.greenPiecesCurrentPosition)
+        print("Current POS for Red: ", end="")
+        print(self.redPiecesCurrentPosition)
+        """
     
     # Click detection on grid ============================================================================
     def onClick(self, x, y):
@@ -174,6 +170,12 @@ class HalmaBoard():
             curPosClickY = clickY - curY
             self.boardFrame.focus_set()
             self.onClick(curPosClickX, curPosClickY)
+        else:
+            pass
+        
+    def findMousePosOVERRIDE(self, event):
+        if (self.gameOver == False):
+            print("OverRide")
         else:
             pass
 
@@ -212,19 +214,20 @@ class HalmaBoard():
                 aButton = self.buttonList[count]
                 if (row%2 == 0):
                     if (col%2 == 0):
-                        aButton.config(bg = "snow")
+                        aButton.config(bg = self.boardTileLight)
                     else:
-                        aButton.config(bg = "gray60")
+                        aButton.config(bg = self.boardTileDark)
                 else:
                     if (col%2 != 0):
-                        aButton.config(bg = "snow")
+                        aButton.config(bg = self.boardTileLight)
                     else:
-                        aButton.config(bg = "gray60")
+                        aButton.config(bg = self.boardTileDark)
                 aButton.grid(row = row + 1, column = col, sticky = N + S + E + W)
                 aButton.bind("<Button-1>", self.findMousePos)
+                aButton.bind("<Button-3>", self.findMousePosOVERRIDE)
                 count += 1
         self.setBoardUp(self.boardSize)
-        self.mainWindow.wm_geometry("900x942") #942 -> 42 comes from the height of the titleLabel+turnLabel.
+        self.mainWindow.wm_geometry("400x442") #942 -> 42 comes from the height of the titleLabel+turnLabel.
         self.mainWindow.resizable(0,0)
 
     def startMainLoop(self):
@@ -232,47 +235,48 @@ class HalmaBoard():
     
     # Move related functions =============================================================================
     def validateMoveSequence(self, row, col):
+        self.potentialMoves = []
         buttonPos = self.boardFrame.grid_slaves(row = row, column = col)
-        if (self.betweenMove == False):
+        if (self.betweenMove == False): # First Click
             if (self.currentTurn == True):
-                if (buttonPos[0].cget("bg") != "green"):
+                if (buttonPos[0].cget("bg") != self.greenColor):
                     self.turnLabel.config(text = "Green Turn: Click on a Green square to move!")
                 else:
                     self.onClickHighlight(row, col)
                     self.checkAroundPos(row, col)
                     self.setBetweenMove()
             else:
-                if (buttonPos[0].cget("bg") != "red"):
+                if (buttonPos[0].cget("bg") != self.redColor):
                     self.turnLabel.config(text = "Red Turn: Click on a Red square to move!")
                 else:
                     self.onClickHighlight(row, col)
                     self.checkAroundPos(row, col)
                     self.setBetweenMove()
                 
-        else:
+        else: # Second Click
             if (self.currentTurn == True):
-                if (buttonPos[0].cget("bg") == "yellow"):
+                if (buttonPos[0].cget("bg") == self.moveToHighlightColor): # Moves
                     self.moveTo(row, col)
                     self.nextTurn()
                     self.boardRefresh()
                     self.moveTotal += 1
                     self.moveNumberLabel.config(text = "Move Count: " + str(self.moveTotal))  
                     self.checkWinCond(self.boardSize)
-                elif (buttonPos[0].cget("bg") == "green"):
+                elif (buttonPos[0].cget("bg") == self.greenColor): # Resets
                     self.boardRefresh()
                     self.setBetweenMove()
                     self.onClickHighlight(row, col)
                     self.checkAroundPos(row, col)
                     self.setBetweenMove()
             else:
-                if (buttonPos[0].cget("bg") == "yellow"):
+                if (buttonPos[0].cget("bg") == self.moveToHighlightColor): # Moves
                     self.moveTo(row, col)
                     self.nextTurn()
                     self.boardRefresh()
                     self.moveTotal += 1
                     self.moveNumberLabel.config(text = "Move Count: " + str(self.moveTotal))  
                     self.checkWinCond(self.boardSize)
-                elif (buttonPos[0].cget("bg") == "red"):
+                elif (buttonPos[0].cget("bg") == self.redColor): # Resets
                     self.boardRefresh()
                     self.setBetweenMove()
                     self.onClickHighlight(row, col)
@@ -281,41 +285,55 @@ class HalmaBoard():
 
     def onClickHighlight(self, row, col):
         buttonPos = self.boardFrame.grid_slaves(row = row, column = col)
-        if (buttonPos[0].cget("bg") == "red"):
-            buttonPos[0].config(bg = "maroon")
-        elif (buttonPos[0].cget("bg") == "green"):
-            buttonPos[0].config(bg = "seagreen")
+        if (buttonPos[0].cget("bg") == self.redColor):
+            buttonPos[0].config(bg = self.redHighlightColor)
+        elif (buttonPos[0].cget("bg") == self.greenColor):
+            buttonPos[0].config(bg = self.greenHighlightColor)
 
     def checkAroundPos(self, row, col):
+        print("CurPos: " + str(row) + str(col))
         for r in range(row - 1, row + 2):
             for c in range(col - 1, col + 2):
                 if (row == r and c == col):
                     pass
                 else:
-                    self.checkMove(r, c)
-                    self.checkJump(r, c)
-        """
-        # Before try: statements were used. Can be deleted.
-        #print("rowIn: " + str(row) + " colIn: " + str(col)) #TESTING
-        for r in range(row - 1, row + 2):
-            if (r <= 0 or r >= self.boardSize + 1):
-                pass
-                #print("Would be Row error, Pass here") #TESTING
-            else:
-                #print("Row: " + str(r)) #TESTING
-                for c in range(col - 1, col + 2):
-                    if (c <= -1 or c >= self.boardSize):
-                        pass
-                        #print("Would be Column error, Pass here") #TESTING
-                    else:
-                        if (row == r and c == col):
-                            pass
+                    if (self.currentTurn == True): #GREENTURN
+                        if ((row, col) in self.greenCorner):
+                            print("In GreenCorner")
+                            self.checkMove(r, c, True, False)
+                            self.checkJump(r, c, True, False)
+                        elif ((row, col) in self.redCorner):
+                            print("InGoalState")
+                            self.checkMove(r, c, False, True)
+                            self.checkJump(r, c, False, True)
                         else:
-                            self.checkMove(r, c)
-                            self.checkJump(r, c)
-                            # print("Row: " + str(r) + " Col: " + str(c)) #TESTING
-        #print("=====") # TESTING
+                            print("NOT In GreenCorner")
+                            self.checkMove(r, c, False, False)
+                            self.checkJump(r, c, False, False)
+                    else: #REDTURN
+                        if ((row, col) in self.redCorner):
+                            print("In RedCorner")
+                            self.checkMove(r, c, True, False)
+                            self.checkJump(r, c, True, False)
+                        elif ((row, col) in self.greenCorner):
+                            print("InGoalState")
+                            self.checkMove(r, c, False, True)
+                            self.checkJump(r, c, False, True)
+                        else:
+                            print("NOT In RedCorner")
+                            self.checkMove(r, c, False, False)
+                            self.checkJump(r, c, False, False)
+        print("++++++++++++")
         """
+        #for x,y in self.potentialMoves:
+        #    print("PotentialMove: ", end="")
+        #    print(x, y)
+        #    self.setCurrentToGridCoordinates(x + 1, y)
+        #    self.checkJump(x + 1, y)
+        #    print("Checked: " + str(x) + " " + str(y))
+        ####print(self.potentialMoves)
+        """
+                    
     def setCurrentToGridCoordinates(self, row, col):
         self.toGridX = row
         self.toGridY = col
@@ -325,231 +343,81 @@ class HalmaBoard():
         self.currentGridY = col
         #print(self.currentGridX, self.currentGridY) #TESTING
         
-    def checkMove(self, row, col): # Highlights potential basic moves
+    def checkMove(self, row, col, inOwnGoal, inOtherGoal): # Highlights potential basic moves
         try:
             buttonPos = self.boardFrame.grid_slaves(row = row, column = col)
-            if (buttonPos[0].cget("bg") == "snow" or buttonPos[0].cget("bg") == "gray60" or buttonPos[0].cget("bg") == "lightblue"):
-                buttonPos[0].config(bg = "yellow")
+            if (inOwnGoal == False and inOtherGoal == False):
+                if (self.currentTurn == True): #GREENTURN
+                    if (buttonPos[0].cget("bg") == self.boardTileLight or buttonPos[0].cget("bg") == self.boardTileDark
+                        or buttonPos[0].cget("bg") == self.redCornerColor):
+                        buttonPos[0].config(bg = self.moveToHighlightColor)
+                        self.potentialMoves.append((row, col))
+                    else:
+                        pass
+                else: #REDTURN
+                    if (buttonPos[0].cget("bg") == self.boardTileLight or buttonPos[0].cget("bg") == self.boardTileDark
+                        or buttonPos[0].cget("bg") == self.greenCornerColor):
+                        buttonPos[0].config(bg = self.moveToHighlightColor)
+                        self.potentialMoves.append((row, col))
+                    else:
+                        pass
+            elif (inOtherGoal == True):
+                if (self.currentTurn == True): #GREENTURN
+                    if (buttonPos[0].cget("bg") == self.redCornerColor):
+                        buttonPos[0].config(bg = self.moveToHighlightColor)
+                        self.potentialMoves.append((row, col))
+                    else:
+                        pass
+                else: #REDTURN
+                    if (buttonPos[0].cget("bg") == self.greenCornerColor):
+                        buttonPos[0].config(bg = self.moveToHighlightColor)
+                        self.potentialMoves.append((row, col))
+                    else:
+                        pass
             else:
-                pass
+                if (buttonPos[0].cget("bg") == self.boardTileLight or buttonPos[0].cget("bg") == self.boardTileDark
+                    or buttonPos[0].cget("bg") == self.greenCornerColor or buttonPos[0].cget("bg") == self.redCornerColor):
+                    buttonPos[0].config(bg = self.moveToHighlightColor)
+                    self.potentialMoves.append((row, col))
+                else:
+                    pass 
         except (IndexError, TclError):
             pass
 
     def checkMultiJump(self, row, col):
         #testPos = self.boardFrame.grid_slaves(row = row, column = col) #TESTING
         #testPos[0].config(bg = "blue") #TESTING
+        
         for r in range(row - 1, row + 2):
             for c in range(col - 1, col + 2):
                 if (row == r and c == col):
                     pass
                 else:
-                    self.checkJump(r, c)
+                    if (self.currentTurn == True): #GREENTURN
+                        if ((row, col) in self.greenCorner):
+                            self.checkJump(r, c, True, False)
+                        elif ((row, col) in self.redCorner):
+                            self.checkJump(r, c, False, True)
+                        else:
+                            self.checkJump(r, c, False, False)
+                    else: #REDTURN
+                        if ((row, col) in self.redCorner):
+                            self.checkJump(r, c, True, False)
+                        elif ((row, col) in self.greenCorner):
+                            self.checkJump(r, c, False, True)
+                        else:
+                            self.checkJump(r, c, False, False)
                     #print(self.toGridX, self.toGridY, self.currentGridX, self.currentGridY) #TESTING
         #print("===") # TESTING
-
-    def checkJump(self, row, col):
-        isOn = True
-        try:
-            buttonPos = self.boardFrame.grid_slaves(row = row, column = col)
-            if (buttonPos[0].cget("bg") == "green" or buttonPos[0].cget("bg") == "red" or buttonPos[0].cget("bg") == "yellow"):
-                try:
-                    if (self.currentTurn == True): # GREEN PLAYER
-                        try:
-                            #RightJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX + 1, column = self.toGridY + 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX + 1, column = self.toGridY + 1)
-                            #jumpToPos[0].config(bg = "purple") #TESTING
-                            #jumpOverPos[0].config(bg = "red") #TESTING
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX, self.toGridY + 2)
-                                #testPos = self.boardFrame.grid_slaves(row = self.toGridX, column = self.toGridY) #TESTING
-                                #testPos[0].config(bg = "pink") #TESTING
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass
-                        try:   
-                        #TopJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX - 1, column = self.toGridY)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX, column = self.toGridY)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX - 2, self.toGridY)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass
-                        try:    
-                            #TopRightJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX - 1, column = self.toGridY + 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX, column = self.toGridY + 1)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX - 2, self.toGridY + 2)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass
-                        try:    
-                            #TopLeftJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX - 1, column = self.toGridY - 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX, column = self.toGridY - 1)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX - 2, self.toGridY - 2)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass
-                        try:    
-                            #BotJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX + 3, column = self.toGridY)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX + 2, column = self.toGridY)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX + 2, self.toGridY)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass
-                        try:    
-                            #BotLeftJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX + 3, column = self.toGridY - 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX + 2, column = self.toGridY - 1)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX + 2, self.toGridY - 2)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass
-                        try:    
-                            #LeftJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX + 1, column = self.toGridY - 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX + 1, column = self.toGridY - 1)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX, self.toGridY - 2)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass
-                        try:   
-                            #BotRightJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX + 3, column = self.toGridY + 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX + 2, column = self.toGridY + 1)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX + 2, self.toGridY + 2)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass   
-                    else: # RED PLAYER
-                        try:
-                            #BotJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX + 3, column = self.toGridY)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX + 2, column = self.toGridY)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX + 2, self.toGridY)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass 
-                        try:
-                            #LeftJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX + 1, column = self.toGridY - 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX + 1, column = self.toGridY - 1)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX, self.toGridY - 2)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass 
-                        try:    
-                            #BotLeftJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX + 3, column = self.toGridY - 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX + 2, column = self.toGridY - 1)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX + 2, self.toGridY - 2)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass 
-                        try:    
-                            #BotRightJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX + 3, column = self.toGridY + 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX + 2, column = self.toGridY + 1)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX + 2, self.toGridY + 2)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass 
-                        try:    
-                            #TopJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX - 1, column = self.toGridY)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX, column = self.toGridY)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX - 2, self.toGridY)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass 
-                        try:    
-                            #TopRightJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX - 1, column = self.toGridY + 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX, column = self.toGridY + 1)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX - 2, self.toGridY + 2)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass 
-                        try:    
-                            #RightJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX + 1, column = self.toGridY + 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX + 1, column = self.toGridY + 1)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX, self.toGridY + 2)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass
-                        try:    
-                            #TopLeftJump
-                            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX - 1, column = self.toGridY - 2)
-                            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX, column = self.toGridY - 1)
-                            if ((jumpToPos[0].cget("bg") == "snow" or jumpToPos[0].cget("bg") == "gray60" or jumpToPos[0].cget("bg") == "lightblue") and (jumpOverPos[0].cget("bg") == "green" or jumpOverPos[0].cget("bg") == "red")):
-                                jumpToPos[0].config(bg = "yellow")
-                                self.setCurrentToGridCoordinates(self.toGridX - 2, self.toGridY - 2)
-                                self.checkMultiJump(self.toGridX, self.toGridY)
-                                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
-                        except (IndexError, TclError):
-                            pass     
-                except (IndexError, TclError):
-                    pass                
-            else:
-                pass
-        except (IndexError, TclError):
-            pass
 
     def moveTo(self, row, col):
         buttonPos = self.boardFrame.grid_slaves(row = row, column = col)
         if (self.currentTurn == True):        
-            buttonPos[0].config(bg = "green")
+            buttonPos[0].config(bg = self.greenColor)
             self.turnLabel.config(text = "Red Turn: Click on a Red square to move!")
             self.setBetweenMove()
         else:
-            buttonPos[0].config(bg = "red")
+            buttonPos[0].config(bg = self.redColor)
             self.turnLabel.config(text = "Green Turn: Click on a Green square to move!")
             self.setBetweenMove()
 
@@ -565,94 +433,152 @@ class HalmaBoard():
         else:
             self.currentTurn = True
 
+    def jumpAround(self, tox, toy, ovx, ovy, pox, poy, cux, cuy):
+        try:
+            jumpToPos = self.boardFrame.grid_slaves(row = self.toGridX + tox, column = self.toGridY + toy)
+            jumpOverPos = self.boardFrame.grid_slaves(row = self.toGridX + ovx, column = self.toGridY + ovy)
+            #jumpToPos[0].config(bg = "purple") #TESTING
+            #jumpOverPos[0].config(bg = "red") #TESTING
+
+
+
+
+
+
+            
+            if ((jumpToPos[0].cget("bg") == self.boardTileLight or jumpToPos[0].cget("bg") == self.boardTileDark
+                 or jumpToPos[0].cget("bg") == self.greenCornerColor or jumpToPos[0].cget("bg") == self.redCornerColor)
+                and (jumpOverPos[0].cget("bg") == self.greenColor or jumpOverPos[0].cget("bg") == self.redColor)):
+                jumpToPos[0].config(bg = self.moveToHighlightColor)
+                self.potentialMoves.append((self.toGridX + pox, self.toGridY + poy))
+                self.setCurrentToGridCoordinates(self.toGridX + cux, self.toGridY + cuy)
+                #testPos = self.boardFrame.grid_slaves(row = self.toGridX, column = self.toGridY) #TESTING
+                #testPos[0].config(bg = "pink") #TESTING
+                self.checkMultiJump(self.toGridX, self.toGridY)
+                self.setCurrentToGridCoordinates(self.currentGridX, self.currentGridY)
+            else:
+                pass
+
+
+
+
+
+            
+        except (IndexError, TclError):
+            pass
+                          
+    def checkJump(self, row, col, inOwnGoal, inOtherGoal):
+        try:
+            buttonPos = self.boardFrame.grid_slaves(row = row, column = col)
+            if (buttonPos[0].cget("bg") == self.greenColor or buttonPos[0].cget("bg") == self.redColor or buttonPos[0].cget("bg") == self.moveToHighlightColor):
+                try:
+                    if (self.currentTurn == True): # GREEN PLAYER
+                        self.jumpAround(1, 2, 1, 1, 1, 2, 0, 2)
+                        self.jumpAround(-1, 0, 0, 0, -1, 0, -2, 0)
+                        self.jumpAround(-1, 2, 0, 1, -1, 2, -2, 2)
+                        self.jumpAround(-1, -2, 0, -1, -1, -2, -2, -2)
+                        self.jumpAround(3, 0, 2, 0, 3, 0, 2, 0)
+                        self.jumpAround(3, -2, 2, -1, 3, -2, 2, -2)
+                        self.jumpAround(1, -2, 1, -1, 1, -2, 0, -2)
+                        self.jumpAround(3, 2, 2, 1, 3, 2, 2, 2)
+                    else: # RED PLAYER
+                        self.jumpAround(3, 0, 2, 0, 3, 0, 2, 0)
+                        self.jumpAround(1, -2, 1, -1, 1, -2, 0, -2)
+                        self.jumpAround(3, -2, 2, -1, 3, -2, 2, -2)
+                        self.jumpAround(3, 2, 2, 1, 3, 2, 2, 2)
+                        self.jumpAround(-1, 0, 0, 0, -1, 0, -2, 0)
+                        self.jumpAround(-1, 2, 0, 1, -1, 2, -2, 2)
+                        self.jumpAround(1, 2, 1, 1, 1, 2, 0, 2)
+                        self.jumpAround(-1, -2, 0, -1, -1, -2, -2, -2) 
+                except (IndexError, TclError):
+                    pass                
+            else:
+                pass
+        except (IndexError, TclError):
+            pass
+
     # Win Conditions =====================================================================================
     def checkWinCond(self, size):
         if (size == 8):
             self.checkWinCondition8()
-        elif (size == 10):
-            self.checkWinCondition10()
-        elif (size == 16):
-            self.checkWinCondition16()
     
     def checkWinCondition8(self):
-        unmarkTop = [(1, 5), (2, 5), (2, 6), (3, 5), (3, 6), (3, 7)]
-        unmarkBot = [(6, 1), (6, 2), (7, 2), (6, 3), (7, 3), (8, 3)]
         greenScoreCounter = [False, False, False, False, False, False, False, False, False, False]
         redScoreCounter = [False, False, False, False, False, False, False, False, False, False]
         redPos1, redPos2, redPos3, redPos4, redPos5, redPos6, redPos7, redPos8, redPos9, redPos10 = False, False, False, False, False, False, False, False, False, False
         greenPos1, greenPos2, greenPos3, greenPos4, greenPos5, greenPos6, greenPos7, greenPos8, greenPos9, greenPos10 = False, False, False, False, False, False, False, False, False, False
         for row in range(4):
             for col in range(4):
-                if ((row,col+5) not in unmarkTop):
+                if ((row,col+5) not in self.redCornerUnmark):
                     testButton = self.boardFrame.grid_slaves(row = row + 1, column = col + 4)
-                    if (testButton[0].cget("bg") == "snow" or testButton[0].cget("bg") == "gray60"):
-                        testButton[0].config(bg = "lightblue")
+                    if (testButton[0].cget("bg") == self.boardTileLight or testButton[0].cget("bg") == self.boardTileDark):
+                        testButton[0].config(bg = self.redCornerColor)
                     else:
                         if (row == 0 and col + 5 == 6):
-                            if (testButton[0].cget("bg") == "green"):
+                            if (testButton[0].cget("bg") == self.greenColor):
                                 greenPos1 = True
                                 greenScoreCounter[0] = True
                             else:
                                 greenPos1 = False
                                 greenScoreCounter[0] = False
                         if (row == 0 and col + 5 == 7):
-                            if (testButton[0].cget("bg") == "green"):
+                            if (testButton[0].cget("bg") == self.greenColor):
                                 greenPos2 = True
                                 greenScoreCounter[1] = True
                             else:
                                 greenPos2 = False
                                 greenScoreCounter[1] = False
                         if (row == 0 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
+                            if (testButton[0].cget("bg") == self.greenColor):
                                 greenPos3 = True
                                 greenScoreCounter[2] = True
                             else:
                                 greenPos3 = False
                                 greenScoreCounter[2] = False
                         if (row == 1 and col + 5 == 7):
-                            if (testButton[0].cget("bg") == "green"):
+                            if (testButton[0].cget("bg") == self.greenColor):
                                 greenPos4 = True
                                 greenScoreCounter[3] = True
                             else:
                                 greenPos4 = False
                                 greenScoreCounter[3] = False
                         if (row == 1 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
+                            if (testButton[0].cget("bg") == self.greenColor):
                                 greenPos5 = True
                                 greenScoreCounter[4] = True
                             else:
                                 greenPos5 = False
                                 greenScoreCounter[4] = False
                         if (row == 2 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
+                            if (testButton[0].cget("bg") == self.greenColor):
                                 greenPos6 = True
                                 greenScoreCounter[5] = True
                             else:
                                 greenPos6 = False
                                 greenScoreCounter[5] = False
                         if (row == 0 and col + 5 == 5):
-                            if (testButton[0].cget("bg") == "green"):
+                            if (testButton[0].cget("bg") == self.greenColor):
                                 greenPos7 = True
                                 greenScoreCounter[6] = True
                             else:
                                 greenPos7 = False
                                 greenScoreCounter[6] = False
                         if (row == 1 and col + 5 == 6):
-                            if (testButton[0].cget("bg") == "green"):
+                            if (testButton[0].cget("bg") == self.greenColor):
                                 greenPos8 = True
                                 greenScoreCounter[7] = True
                             else:
                                 greenPos8 = False
                                 greenScoreCounter[7] = False
                         if (row == 2 and col + 5 == 7):
-                            if (testButton[0].cget("bg") == "green"):
+                            if (testButton[0].cget("bg") == self.greenColor):
                                 greenPos9 = True
                                 greenScoreCounter[8] = True
                             else:
                                 greenPos9 = False
                                 greenScoreCounter[8] = False
                         if (row == 3 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
+                            if (testButton[0].cget("bg") == self.greenColor):
                                 greenPos10 = True
                                 greenScoreCounter[9] = True
                             else:
@@ -660,82 +586,83 @@ class HalmaBoard():
                                 greenScoreCounter[9] = False
         for row in range(4):
             for col in range(4):
-                if ((row+6,col) not in unmarkBot):
+                if ((row+6,col) not in self.greenCornerUnmark):
                     testButton = self.boardFrame.grid_slaves(row = row + 5, column = col)
-                    if (testButton[0].cget("bg") == "snow" or testButton[0].cget("bg") == "gray60"):
-                        testButton[0].config(bg = "lightblue")
+                    if (testButton[0].cget("bg") == self.boardTileLight or testButton[0].cget("bg") == self.boardTileDark):
+                        testButton[0].config(bg = self.greenCornerColor)
                     else:
                         if (row + 6 == 7 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
+                            if (testButton[0].cget("bg") == self.redColor):
                                 redPos1 = True
                                 redScoreCounter[0] = True
                             else:
                                 redPos1 = False
                                 redScoreCounter[0] = False
                         if (row + 6 == 8 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
+                            if (testButton[0].cget("bg") == self.redColor):
                                 redPos2 = True
                                 redScoreCounter[1] = True
                             else:
                                 redPos2 = False
                                 redScoreCounter[1] = False
                         if (row + 6 == 8 and col == 1):
-                            if (testButton[0].cget("bg") == "red"):
+                            if (testButton[0].cget("bg") == self.redColor):
                                 redPos3 = True
                                 redScoreCounter[2] = True
                             else:
                                 redPos3 = False
                                 redScoreCounter[2] = False
                         if (row + 6 == 9 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
+                            if (testButton[0].cget("bg") == self.redColor):
                                 redPos4 = True
                                 redScoreCounter[3] = True
                             else:
                                 redPos4 = False
                                 redScoreCounter[3] = False
                         if (row + 6 == 9 and col == 1):
-                            if (testButton[0].cget("bg") == "red"):
+                            if (testButton[0].cget("bg") == self.redColor):
                                 redPos5 = True
                                 redScoreCounter[4] = True
                             else:
                                 redPos5 = False
                                 redScoreCounter[4] = False
                         if (row + 6 == 9 and col == 2):
-                            if (testButton[0].cget("bg") == "red"):
+                            if (testButton[0].cget("bg") == self.redColor):
                                 redPos6 = True
                                 redScoreCounter[5] = True
                             else:
                                 redPos6 = False
                                 redScoreCounter[5] = False
                         if (row + 6 == 6 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
+                            if (testButton[0].cget("bg") == self.redColor):
                                 redPos7 = True
                                 redScoreCounter[6] = True
                             else:
                                 redPos7 = False
                                 redScoreCounter[6] = False
                         if (row + 6 == 7 and col == 1):
-                            if (testButton[0].cget("bg") == "red"):
+                            if (testButton[0].cget("bg") == self.redColor):
                                 redPos8 = True
                                 redScoreCounter[7] = True
                             else:
                                 redPos8 = False
                                 redScoreCounter[7] = False
                         if (row + 6 == 8 and col == 2):
-                            if (testButton[0].cget("bg") == "red"):
+                            if (testButton[0].cget("bg") == self.redColor):
                                 redPos9 = True
                                 redScoreCounter[8] = True
                             else:
                                 redPos9 = False
                                 redScoreCounter[8] = False
                         if (row + 6 == 9 and col == 3):
-                            if (testButton[0].cget("bg") == "red"):
+                            if (testButton[0].cget("bg") == self.redColor):
                                 redPos10 = True
                                 redScoreCounter[9] = True
                             else:
                                 redPos10 = False
                                 redScoreCounter[9] = False
-        if (greenPos1 == True and greenPos2 == True and greenPos3 == True and greenPos4 == True and greenPos5 == True and greenPos6 == True and greenPos7 == True and greenPos8 == True and greenPos9 == True and greenPos10 == True):
+        if (greenPos1 == True and greenPos2 == True and greenPos3 == True and greenPos4 == True and greenPos5 == True and greenPos6 == True
+            and greenPos7 == True and greenPos8 == True and greenPos9 == True and greenPos10 == True):
             self.turnLabel.config(text = "CONGRATULATIONS Green! You won!!!!!")
             for TF in greenScoreCounter:
                 if (TF == True):
@@ -747,7 +674,8 @@ class HalmaBoard():
             self.redScoreLabel.config(text = "Red Score: " + str(self.redScore))
             self.greenScoreLabel.config(text = "Green Score: " + str(self.greenScore))
             self.moveNumberLabel.config(text = "Move Count Final: " + str(self.moveTotal))
-        elif (redPos1 == True and redPos2 == True and redPos3 == True and redPos4 == True and redPos5 == True and redPos6 == True and redPos7 == True and redPos8 == True and redPos9 == True and redPos10 == True):
+        elif (redPos1 == True and redPos2 == True and redPos3 == True and redPos4 == True and redPos5 == True
+              and redPos6 == True and redPos7 == True and redPos8 == True and redPos9 == True and redPos10 == True):
             self.turnLabel.config(text = "CONGRATULATIONS Red! You won!!!!!")
             for TF in greenScoreCounter:
                 if (TF == True):
@@ -758,556 +686,27 @@ class HalmaBoard():
             self.gameOver = True
             self.redScoreLabel.config(text = "Red Score: " + str(self.redScore))
             self.greenScoreLabel.config(text = "Green Score: " + str(self.greenScore))
-            self.moveNumberLabel.config(text = "Move Count Final: " + str(self.moveTotal))        
+            self.moveNumberLabel.config(text = "Move Count Final: " + str(self.moveTotal))
+            
+    # Timer/Countdown ===================================================================================
+    def countdown(self, t):
+        while t >= 0:
+            mins, secs = divmod(t, 60)
+            timeformat = '{:02d}:{:02d}'.format(mins, secs)
+            if (t == 0):
+                print(timeformat, end="")
+                print(" Time Up!")
+                break
+            else:
+                print(timeformat)
+            time.sleep(1)
+            t -= 1
 
-    def checkWinCondition10(self):
-        unmarkTop = [(2, 6), (3, 6), (3, 7), (1, 6), (2, 7), (3, 8)]
-        unmarkBot = [(7, 2), (7, 3), (8, 3), (7, 1), (8, 2), (9, 3)]
-        greenScoreCounter = [False, False, False, False, False, False, False, False, False, False]
-        redScoreCounter = [False, False, False, False, False, False, False, False, False, False]
-        redPos1, redPos2, redPos3, redPos4, redPos5, redPos6, redPos7, redPos8, redPos9, redPos10 = False, False, False, False, False, False, False, False, False, False
-        greenPos1, greenPos2, greenPos3, greenPos4, greenPos5, greenPos6, greenPos7, greenPos8, greenPos9, greenPos10 = False, False, False, False, False, False, False, False, False, False
-        for row in range(4):
-            for col in range(4):
-                if ((row,col+6) not in unmarkTop):
-                    testButton = self.boardFrame.grid_slaves(row = row + 1, column = col + 6)
-                    if (testButton[0].cget("bg") == "snow" or testButton[0].cget("bg") == "gray60"):
-                        testButton[0].config(bg = "lightblue")
-                    else:
-                        if (row == 0 and col + 5 == 6):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos1 = True
-                                greenScoreCounter[0] = True
-                            else:
-                                greenPos1 = False
-                                greenScoreCounter[0] = False
-                        if (row == 0 and col + 5 == 7):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos2 = True
-                                greenScoreCounter[1] = True
-                            else:
-                                greenPos2 = False
-                                greenScoreCounter[1] = False
-                        if (row == 0 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos3 = True
-                                greenScoreCounter[2] = True
-                            else:
-                                greenPos3 = False
-                                greenScoreCounter[2] = False
-                        if (row == 1 and col + 5 == 7):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos4 = True
-                                greenScoreCounter[3] = True
-                            else:
-                                greenPos4 = False
-                                greenScoreCounter[3] = False
-                        if (row == 1 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos5 = True
-                                greenScoreCounter[4] = True
-                            else:
-                                greenPos5 = False
-                                greenScoreCounter[4] = False
-                        if (row == 2 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos6 = True
-                                greenScoreCounter[5] = True
-                            else:
-                                greenPos6 = False
-                                greenScoreCounter[5] = False
-                        if (row == 0 and col + 5 == 5):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos7 = True
-                                greenScoreCounter[6] = True
-                            else:
-                                greenPos7 = False
-                                greenScoreCounter[6] = False
-                        if (row == 1 and col + 5 == 6):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos8 = True
-                                greenScoreCounter[7] = True
-                            else:
-                                greenPos8 = False
-                                greenScoreCounter[7] = False
-                        if (row == 2 and col + 5 == 7):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos9 = True
-                                greenScoreCounter[8] = True
-                            else:
-                                greenPos9 = False
-                                greenScoreCounter[8] = False
-                        if (row == 3 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos10 = True
-                                greenScoreCounter[9] = True
-                            else:
-                                greenPos10 = False
-                                greenScoreCounter[9] = False
-        for row in range(4):
-            for col in range(4):
-                if ((row+7,col) not in unmarkBot):
-                    testButton = self.boardFrame.grid_slaves(row = row + 7, column = col)
-                    if (testButton[0].cget("bg") == "snow" or testButton[0].cget("bg") == "gray60"):
-                        testButton[0].config(bg = "lightblue")
-                    else:
-                        if (row + 6 == 6 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos1 = True
-                                redScoreCounter[0] = True
-                            else:
-                                redPos1 = False
-                                redScoreCounter[0] = False
-                        if (row + 6 == 7 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos2 = True
-                                redScoreCounter[1] = True
-                            else:
-                                redPos2 = False
-                                redScoreCounter[1] = False
-                        if (row + 6 == 7 and col == 1):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos3 = True
-                                redScoreCounter[2] = True
-                            else:
-                                redPos3 = False
-                                redScoreCounter[2] = False
-                        if (row + 6 == 8 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos4 = True
-                                redScoreCounter[3] = True
-                            else:
-                                redPos4 = False
-                                redScoreCounter[3] = False
-                        if (row + 6 == 8 and col == 1):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos5 = True
-                                redScoreCounter[4] = True
-                            else:
-                                redPos5 = False
-                                redScoreCounter[4] = False
-                        if (row + 6 == 8 and col == 2):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos6 = True
-                                redScoreCounter[5] = True
-                            else:
-                                redPos6 = False
-                                redScoreCounter[5] = False
-                        if (row + 6 == 9 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos7 = True
-                                redScoreCounter[6] = True
-                            else:
-                                redPos7 = False
-                                redScoreCounter[6] = False
-                        if (row + 6 == 9 and col == 1):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos8 = True
-                                redScoreCounter[7] = True
-                            else:
-                                redPos8 = False
-                                redScoreCounter[7] = False
-                        if (row + 6 == 9 and col == 2):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos9 = True
-                                redScoreCounter[8] = True
-                            else:
-                                redPos9 = False
-                                redScoreCounter[8] = False
-                        if (row + 6 == 9 and col == 3):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos10 = True
-                                redScoreCounter[9] = True
-                            else:
-                                redPos10 = False
-                                redScoreCounter[9] = False
-        if (greenPos1 == True and greenPos2 == True and greenPos3 == True and greenPos4 == True and greenPos5 == True and greenPos6 == True and greenPos7 == True and greenPos8 == True and greenPos9 == True and greenPos10 == True):
-            self.turnLabel.config(text = "CONGRATULATIONS Green! You won!!!!!")
-            for TF in greenScoreCounter:
-                if (TF == True):
-                    self.greenScore += 1
-            for TF in redScoreCounter:
-                if (TF == True):
-                    self.redScore += 1
-            self.gameOver = True
-            self.redScoreLabel.config(text = "Red Score: " + str(self.redScore))
-            self.greenScoreLabel.config(text = "Green Score: " + str(self.greenScore))
-            self.moveNumberLabel.config(text = "Move Count Final: " + str(self.moveTotal))  
-        elif (redPos1 == True and redPos2 == True and redPos3 == True and redPos4 == True and redPos5 == True and redPos6 == True and redPos7 == True and redPos8 == True and redPos9 == True and redPos10 == True):
-            self.turnLabel.config(text = "CONGRATULATIONS Red! You won!!!!!")
-            for TF in greenScoreCounter:
-                if (TF == True):
-                    self.greenScore += 1
-            for TF in redScoreCounter:
-                if (TF == True):
-                    self.redScore += 1
-            self.gameOver = True
-            self.redScoreLabel.config(text = "Red Score: " + str(self.redScore))
-            self.greenScoreLabel.config(text = "Green Score: " + str(self.greenScore))
-            self.moveNumberLabel.config(text = "Move Count Final: " + str(self.moveTotal))  
-        
-
-    def checkWinCondition16(self):
-        unmarkTop = [(2, 11), (3, 11), (4, 11), (4, 12), (3, 12), (4, 13)]
-        unmarkBot = [(12, 2), (12, 3), (12, 4), (13, 3), (13, 4), (14, 4)]
-        greenScoreCounter = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
-        redScoreCounter = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
-        redPos1, redPos2, redPos3, redPos4, redPos5, redPos6, redPos7, redPos8, redPos9, redPos10 = False, False, False, False, False, False, False, False, False, False
-        greenPos1, greenPos2, greenPos3, greenPos4, greenPos5, greenPos6, greenPos7, greenPos8, greenPos9, greenPos10 = False, False, False, False, False, False, False, False, False, False
-        redPos11, redPos12, redPos13, redPos14, redPos15, redPos16, redPos17, redPos18, redPos19 = False, False, False, False, False, False, False, False, False
-        greenPos11, greenPos12, greenPos13, greenPos14, greenPos15, greenPos16, greenPos17, greenPos18, greenPos19 = False, False, False, False, False, False, False, False, False, 
-        for row in range(5):
-            for col in range(5):
-                if ((row,col+11) not in unmarkTop):
-                    testButton = self.boardFrame.grid_slaves(row = row + 1, column = col + 11)
-                    if (testButton[0].cget("bg") == "snow" or testButton[0].cget("bg") == "gray60"):
-                        testButton[0].config(bg = "lightblue")
-                    else:
-                        if (row == 0 and col + 5 == 7):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos1 = True
-                                greenScoreCounter[0] = True
-                            else:
-                                greenPos1 = False
-                                greenScoreCounter[0] = False
-                        if (row == 0 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos2 = True
-                                greenScoreCounter[1] = True
-                            else:
-                                greenPos2 = False
-                                greenScoreCounter[1] = False
-                        if (row == 0 and col + 5 == 9):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos3 = True
-                                greenScoreCounter[2] = True
-                            else:
-                                greenPos3 = False
-                                greenScoreCounter[2] = False
-                        if (row == 1 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos4 = True
-                                greenScoreCounter[3] = True
-                            else:
-                                greenPos4 = False
-                                greenScoreCounter[3] = False
-                        if (row == 1 and col + 5 == 9):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos5 = True
-                                greenScoreCounter[4] = True
-                            else:
-                                greenPos5 = False
-                                greenScoreCounter[4] = False
-                        if (row == 2 and col + 5 == 9):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos6 = True
-                                greenScoreCounter[5] = True
-                            else:
-                                greenPos6 = False
-                                greenScoreCounter[5] = False
-                        if (row == 0 and col + 5 == 6):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos7 = True
-                                greenScoreCounter[6] = True
-                            else:
-                                greenPos7 = False
-                                greenScoreCounter[6] = False
-                        if (row == 1 and col + 5 == 7):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos8 = True
-                                greenScoreCounter[7] = True
-                            else:
-                                greenPos8 = False
-                                greenScoreCounter[7] = False
-                        if (row == 2 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos9 = True
-                                greenScoreCounter[8] = True
-                            else:
-                                greenPos9 = False
-                                greenScoreCounter[8] = False
-                        if (row == 3 and col + 5 == 9):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos10 = True
-                                greenScoreCounter[9] = True
-                            else:
-                                greenPos10 = False
-                                greenScoreCounter[9] = False
-                        if (row == 0 and col + 5 == 5):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos11 = True
-                                greenScoreCounter[10] = True
-                            else:
-                                greenPos11 = False
-                                greenScoreCounter[10] = False
-                        if (row == 1 and col + 5 == 6):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos12 = True
-                                greenScoreCounter[11] = True
-                            else:
-                                greenPos12 = False
-                                greenScoreCounter[11] = False
-                        if (row == 2 and col + 5 == 7):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos13 = True
-                                greenScoreCounter[12] = True
-                            else:
-                                greenPos13 = False
-                                greenScoreCounter[12] = False
-                        if (row == 3 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos14 = True
-                                greenScoreCounter[13] = True
-                            else:
-                                greenPos14 = False
-                                greenScoreCounter[13] = False
-                        if (row == 4 and col + 5 == 9):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos15 = True
-                                greenScoreCounter[14] = True
-                            else:
-                                greenPos15 = False
-                                greenScoreCounter[14] = False
-                        if (row == 1 and col + 5 == 5):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos16 = True
-                                greenScoreCounter[15] = True
-                            else:
-                                greenPos16 = False
-                                greenScoreCounter[15] = False
-                        if (row == 2 and col + 5 == 6):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos17 = True
-                                greenScoreCounter[16] = True
-                            else:
-                                greenPos17 = False
-                                greenScoreCounter[16] = False
-                        if (row == 3 and col + 5 == 7):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos18 = True
-                                greenScoreCounter[17] = True
-                            else:
-                                greenPos18 = False
-                                greenScoreCounter[17] = False
-                        if (row == 4 and col + 5 == 8):
-                            if (testButton[0].cget("bg") == "green"):
-                                greenPos19 = True
-                                greenScoreCounter[18] = True
-                            else:
-                                greenPos19 = False
-                                greenScoreCounter[18] = False
-        for row in range(5):
-            for col in range(5):
-                if ((row+12,col) not in unmarkBot):
-                    testButton = self.boardFrame.grid_slaves(row = row + 12, column = col)
-                    if (testButton[0].cget("bg") == "snow" or testButton[0].cget("bg") == "gray60"):
-                        testButton[0].config(bg = "lightblue")
-                    else:
-                        if (row + 6 == 7 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos1 = True
-                                redScoreCounter[0] = True
-                            else:
-                                redPos1 = False
-                                redScoreCounter[0] = False
-                        if (row + 6 == 8 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos2 = True
-                                redScoreCounter[1] = True
-                            else:
-                                redPos2 = False
-                                redScoreCounter[1] = False
-                        if (row + 6 == 8 and col == 1):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos3 = True
-                                redScoreCounter[2] = True
-                            else:
-                                redPos3 = False
-                                redScoreCounter[2] = False
-                        if (row + 6 == 9 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos4 = True
-                                redScoreCounter[3] = True
-                            else:
-                                redPos4 = False
-                                redScoreCounter[3] = False
-                        if (row + 6 == 9 and col == 1):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos5 = True
-                                redScoreCounter[4] = True
-                            else:
-                                redPos5 = False
-                                redScoreCounter[4] = False
-                        if (row + 6 == 9 and col == 2):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos6 = True
-                                redScoreCounter[5] = True
-                            else:
-                                redPos6 = False
-                                redScoreCounter[5] = False
-                        if (row + 6 == 10 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos7 = True
-                                redScoreCounter[6] = True
-                            else:
-                                redPos7 = False
-                                redScoreCounter[6] = False
-                        if (row + 6 == 10 and col == 1):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos8 = True
-                                redScoreCounter[7] = True
-                            else:
-                                redPos8 = False
-                                redScoreCounter[7] = False
-                        if (row + 6 == 10 and col == 2):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos9 = True
-                                redScoreCounter[8] = True
-                            else:
-                                redPos9 = False
-                                redScoreCounter[8] = False
-                        if (row + 6 == 10 and col == 3):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos10 = True
-                                redScoreCounter[9] = True
-                            else:
-                                redPos10 = False
-                                redScoreCounter[9] = False
-                        if (row + 6 == 6 and col == 0):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos11 = True
-                                redScoreCounter[10] = True
-                            else:
-                                redPos11 = False
-                                redScoreCounter[10] = False
-                        if (row + 6 == 7 and col == 1):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos12 = True
-                                redScoreCounter[11] = True
-                            else:
-                                redPos12 = False
-                                redScoreCounter[11] = False
-                        if (row + 6 == 8 and col == 2):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos13 = True
-                                redScoreCounter[12] = True
-                            else:
-                                redPos13 = False
-                                redScoreCounter[12] = False
-                        if (row + 6 == 9 and col == 3):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos14 = True
-                                redScoreCounter[13] = True
-                            else:
-                                redPos14 = False
-                                redScoreCounter[13] = False
-                        if (row + 6 == 10 and col == 4):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos15 = True
-                                redScoreCounter[14] = True
-                            else:
-                                redPos15 = False
-                                redScoreCounter[14] = False
-                        if (row + 6 == 6 and col == 1):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos16 = True
-                                redScoreCounter[15] = True
-                            else:
-                                redPos16 = False
-                                redScoreCounter[15] = False
-                        if (row + 6 == 7 and col == 2):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos17 = True
-                                redScoreCounter[16] = True
-                            else:
-                                redPos17 = False
-                                redScoreCounter[16] = False
-                        if (row + 6 == 8 and col == 3):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos18 = True
-                                redScoreCounter[17] = True
-                            else:
-                                redPos18 = False
-                                redScoreCounter[17] = False
-                        if (row + 6 == 9 and col == 4):
-                            if (testButton[0].cget("bg") == "red"):
-                                redPos19 = True
-                                redScoreCounter[18] = True
-                            else:
-                                redPos19 = False
-                                redScoreCounter[18] = False
-        if (greenPos1 == True and greenPos2 == True and greenPos3 == True and greenPos4 == True and greenPos5 == True and greenPos6 == True and greenPos7 == True and greenPos8 == True and greenPos9 == True and greenPos10 == True and greenPos11 == True and greenPos12 == True and greenPos13 == True and greenPos14 == True and greenPos15 == True and greenPos16 == True and greenPos17 == True and greenPos18 == True and greenPos19 == True):
-            self.turnLabel.config(text = "CONGRATULATIONS Green! You won!!!!!")
-            for TF in greenScoreCounter:
-                if (TF == True):
-                    self.greenScore += 1
-            for TF in redScoreCounter:
-                if (TF == True):
-                    self.redScore += 1
-            self.gameOver = True
-            self.redScoreLabel.config(text = "Red Score: " + str(self.redScore))
-            self.greenScoreLabel.config(text = "Green Score: " + str(self.greenScore))
-            self.moveNumberLabel.config(text = "Move Count Final: " + str(self.moveTotal))  
-            print(self.greenScore, self.redScore, self.moveTotal)
-        elif (redPos1 == True and redPos2 == True and redPos3 == True and redPos4 == True and redPos5 == True and redPos6 == True and redPos7 == True and redPos8 == True and redPos9 == True and redPos10 == True and redPos11 == True and redPos12 == True and redPos13 == True and redPos14 == True and redPos15 == True and redPos16 == True and redPos17 == True and redPos18 == True and redPos19 == True):
-            self.turnLabel.config(text = "CONGRATULATIONS Red! You won!!!!!")
-            for TF in greenScoreCounter:
-                if (TF == True):
-                    self.greenScore += 1
-            for TF in redScoreCounter:
-                if (TF == True):
-                    self.redScore += 1
-            self.gameOver = True
-            self.redScoreLabel.config(text = "Red Score: " + str(self.redScore))
-            self.greenScoreLabel.config(text = "Green Score: " + str(self.greenScore))
-            self.moveNumberLabel.config(text = "Move Count Final: " + str(self.moveTotal))  
-        """
-        print(greenPos1)
-        print(greenPos2)
-        print(greenPos3)
-        print(greenPos4)
-        print(greenPos5)
-        print(greenPos6)
-        print(greenPos7)
-        print(greenPos8)
-        print(greenPos9)
-        print(greenPos10)
-        print(greenPos11)
-        print(greenPos12)
-        print(greenPos13)
-        print(greenPos14)
-        print(greenPos15)
-        print(greenPos16)
-        print(greenPos17)
-        print(greenPos18)
-        print(greenPos19)
-        print("--")
-        print(redPos1)
-        print(redPos2)
-        print(redPos3)
-        print(redPos4)
-        print(redPos5)
-        print(redPos6)
-        print(redPos7)
-        print(redPos8)
-        print(redPos9)
-        print(redPos10)
-        print(redPos11)
-        print(redPos12)
-        print(redPos13)
-        print(redPos14)
-        print(redPos15)
-        print(redPos16)
-        print(redPos17)
-        print(redPos18)
-        print(redPos19)
-        print("--")
-        """
-        
-        
-
+    
 
 newGame = HalmaBoard()
-newGame.createBoard(16)
+newGame.createBoard(8)
+newGame.countdown(0)
 newGame.startMainLoop()
+
         
